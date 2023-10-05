@@ -1,8 +1,8 @@
-# PS-UtilityLib
+# PS-UtilityLibrary
 
 ## Description
 
-PS-UtilityLib is a PowerShell module library designed to offer reusable functionalities commonly required in PowerShell scripting. It aims to streamline PowerShell development by providing a range of utility functions that can be easily imported into any script.
+PS-UtilityLibrary is a PowerShell module library designed to offer reusable functionalities commonly required in PowerShell scripting. It aims to streamline PowerShell development by providing a range of utility functions that can be easily imported into any script.
 
 ## Features
 
@@ -13,13 +13,13 @@ PS-UtilityLib is a PowerShell module library designed to offer reusable function
 
 1. Clone the repository.
     ```bash
-    git clone https://github.com/Doron-Bogomolov/PS-UtilityLib.git
+    git clone https://github.com/Doron-Bogomolov/PS-UtilityLibrary.git
     ```
    **Note**: You can run this command in Git Bash or PowerShell. Make sure you have Git installed. If not, you can download and install it from [here](https://git-scm.com/download/win).
 
 2. Import the module.
     ```powershell
-    Import-Module ./path/to/PS-UtilityLib.psm1
+    Import-Module ./path/to/PS-UtilityLibrary.psm1
     ```
 
 ## Usage
@@ -28,7 +28,7 @@ Here's an example of how to use `Test-AdminPrivilege` from this library:
 
 ```powershell
 # Import the library
-Import-Module ./path/to/PS-UtilityLib.psm1
+Import-Module ./path/to/PS-UtilityLibrary.psm1
 ```
 
 # Use the Test-AdminPrivilege function
