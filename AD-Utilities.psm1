@@ -25,13 +25,13 @@
 #region Get-ComputerOU
 
 # Function: Get-ComputerOU
-# Purpose: Fetches the Organizational Unit (OU) of a given computer from Active Directory.
+# Description: Fetches the Organizational Unit (OU) of a given computer from Active Directory.
 # Parameters: 
 # - ComputerName: The name of the computer for which the OU needs to be fetched. This is a mandatory parameter.
 #
 # Returns: 
-# - A hash table containing 'ComputerName' and 'OU' if the operation is successful.
-# - A hash table containing 'ComputerName' and 'Error' if the operation fails.
+# - A custom object containing 'ComputerName' and 'OU' if the operation is successful.
+# - An error object if the operation fails.
 #
 # Example Usage:
 # $result = Get-ComputerOU -ComputerName "DESKTOP-123"
@@ -43,35 +43,22 @@ function Get-ComputerOU {
         [string]$ComputerName
     )
 
-    # Initialize an empty hash table to store the OU and modification details
-    $OUHash = @{}
+    $OUInfo = New-Object PSObject -property @{
+        'ComputerName' = $ComputerName
+        'OU'           = $null
+    }
 
     try {
-        # Get the computer object using the Active Directory PowerShell module
         $computerObject = Get-ADComputer $ComputerName -ErrorAction Stop
-        # Extract the OU part of the Distinguished Name
         $ou = ($computerObject.DistinguishedName -split ",", 2)[1]
-
-        # Populate the hash table
-        $OUHash['ComputerName'] = $ComputerName
-        $OUHash['OU'] = $ou
-
-        return $OUHash
+        $OUInfo.OU = $ou
     }
     catch {
-        # Handle specific exceptions first
-        if ($_.Exception -is [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]) {
-            $OUHash['Error'] = "Computer not found in AD"
-        }
-        else {
-            $OUHash['Error'] = "An unknown error occurred: $_"
-        }
-
-        # Populate the hash table
-        $OUHash['ComputerName'] = $ComputerName
-
-        return $OUHash
+        Write-Error "An error occurred: $_"
+        return $null
     }
+
+    return $OUInfo
 }
 
 #endregion Get-ComputerOU
@@ -83,13 +70,13 @@ function Get-ComputerOU {
 #region Get-OUModificationHistory
 
 # Function: Get-OUModificationHistory
-# Purpose: Fetches the Organizational Unit (OU) along with its modification history of a given computer from Active Directory.
+# Description: Fetches the Organizational Unit (OU) and its modification history of a given computer from Active Directory.
 # Parameters: 
-# - ComputerName: The name of the computer for which the OU and its modification history need to be fetched. This is a mandatory parameter.
+# - ComputerName: The name of the computer for which the OU and its modification history need to be fetched.
 #
 # Returns: 
-# - A hash table containing 'ComputerName', 'OU', 'Created', and 'Modified' if the operation is successful.
-# - A hash table containing 'ComputerName' and 'Error' if the operation fails.
+# - A custom object containing 'ComputerName', 'OU', 'Created', and 'Modified' if the operation is successful.
+# - An error object if the operation fails.
 #
 # Example Usage:
 # $result = Get-OUModificationHistory -ComputerName "DESKTOP-123"
@@ -101,25 +88,23 @@ function Get-OUModificationHistory {
         [string]$ComputerName
     )
 
-    $OUHistory = @{}
+    $OUHistory = New-Object PSObject -property @{
+        'ComputerName' = $ComputerName
+        'OU'           = $null
+        'Created'      = $null
+        'Modified'     = $null
+    }
 
     try {
-        $ADComputer = Get-ADComputer $ComputerName -Properties "Created", "Modified", "DistinguishedName"
+        $ADComputer = Get-ADComputer $ComputerName -Properties "Created", "Modified" -ErrorAction Stop
         $OU = ($ADComputer.DistinguishedName -split ",", 2)[1]
-
-        $OUHistory['ComputerName'] = $ComputerName
-        $OUHistory['OU'] = $OU
-        $OUHistory['Created'] = $ADComputer.Created
-        $OUHistory['Modified'] = $ADComputer.Modified
-
-    } catch {
-        if ($_.Exception -is [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]) {
-            $OUHistory['Error'] = "Computer not found in AD"
-        }
-        else {
-            $OUHistory['Error'] = "An unknown error occurred: $_"
-        }
-        $OUHistory['ComputerName'] = $ComputerName
+        $OUHistory.OU = $OU
+        $OUHistory.Created = $ADComputer.Created
+        $OUHistory.Modified = $ADComputer.Modified
+    }
+    catch {
+        Write-Error "An error occurred: $_"
+        return $null
     }
 
     return $OUHistory
