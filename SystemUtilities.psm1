@@ -50,6 +50,7 @@ function Test-AdminPrivilege {
     }
 }
 
+
 #endregion Test-AdminPrivilege
 
 
@@ -75,29 +76,31 @@ function Initialize-LogFile {
     [CmdletBinding()]
     param (
         [Alias("p", "filepath")]
-        [string]$FilePath = $(Split-Path -Path $MyInvocation.MyCommand.Path -Parent),
+        [string]$PathParam = $(if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Path $MyInvocation.MyCommand.Path -Parent }),
         
         [Alias("n", "filename")]
-        [string]$FileName = "logFile.txt",
+        [string]$NameParam = "logFile.txt",
         
         [Alias("v", "visible")]
-        [switch]$Visible
+        [switch]$VisibleParam
     )
     
-    $logFile = Join-Path -Path $FilePath -ChildPath $FileName
+    $logFile = Join-Path -Path $PathParam -ChildPath $NameParam
 
     # Check for write permissions to the directory
-    if (Test-Path $FilePath -and (Test-Path $FilePath -IsValid)) {
+    $isValidPath = Test-Path $PathParam -IsValid
+    if ((Test-Path $PathParam) -and $isValidPath) {
+
         try {
-            $null = New-Item -Path "$FilePath\testWrite.tmp" -ItemType File -ErrorAction Stop
-            Remove-Item -Path "$FilePath\testWrite.tmp" -ErrorAction Stop
+            $null = New-Item -Path "$PathParam\testWrite.tmp" -ItemType File -ErrorAction Stop
+            Remove-Item -Path "$PathParam\testWrite.tmp" -ErrorAction Stop
         }
         catch {
-            Write-Host "Insufficient privileges to write to $FilePath. Redirecting to temp folder."
-            $FilePath = [System.IO.Path]::GetTempPath()
+            Write-Host "Insufficient privileges to write to $PathParam. Redirecting to temp folder."
+            $PathParam = [System.IO.Path]::GetTempPath()
             $timestamp = Get-Date -Format "yyyyMMddHHmmss"
-            $FileName = "$FileName-$timestamp.txt"
-            $logFile = Join-Path -Path $FilePath -ChildPath $FileName
+            $NameParam = "$NameParam-$timestamp.txt"
+            $logFile = Join-Path -Path $PathParam -ChildPath $NameParam
         }
     }
 
@@ -107,7 +110,7 @@ function Initialize-LogFile {
     }
 
     # Set visibility
-    if ($Visible) {
+    if ($VisibleParam) {
         Set-ItemProperty -Path $logFile -Name Attributes -Value [System.IO.FileAttributes]::Archive
     } else {
         Set-ItemProperty -Path $logFile -Name Attributes -Value ([System.IO.FileAttributes]::Hidden -bor [System.IO.FileAttributes]::Archive)
@@ -148,14 +151,22 @@ function Show-CustomMenu {
         Write-Host "---------------- $MenuName ----------------"
         
         # Display each option with a corresponding number
-        for ($i=0; $i -lt $OptionNames.Length; $i++) {
+        for ($i = 0; $i -lt $OptionNames.Length; $i++) {
             Write-Host "$($i + 1). $($OptionNames[$i])"
         }
         
         Write-Host "------------------------------------------------"
         
         try {
-            $selectedOption = Read-Host "Please enter the number corresponding to your choice"
+            $userInput = Read-Host "Please enter the number corresponding to your choice"
+            
+            # Check if the user input is a number
+            if ($userInput -match '^\d+$') {
+                $selectedOption = [int]$userInput
+            } else {
+                Write-Host "Invalid input. Please enter a number."
+                continue
+            }
             
             # Validate the user's choice
             if ($selectedOption -ge 1 -and $selectedOption -le $OptionNames.Length) {
@@ -170,5 +181,6 @@ function Show-CustomMenu {
         }
     } while ($true)
 }
+
 
 #endregion Show-CustomMenu

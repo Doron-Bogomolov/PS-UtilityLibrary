@@ -39,27 +39,39 @@
 function Get-ComputerOU {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true, Position = 0)]
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
         [string]$ComputerName
     )
 
-    $OUInfo = New-Object PSObject -property @{
-        'ComputerName' = $ComputerName
-        'OU'           = $null
+    begin {
+        Write-Verbose "Begin block executed."
     }
 
-    try {
-        $computerObject = Get-ADComputer $ComputerName -ErrorAction Stop
-        $ou = ($computerObject.DistinguishedName -split ",", 2)[1]
-        $OUInfo.OU = $ou
-    }
-    catch {
-        Write-Error "An error occurred: $_"
-        return $null
+    process {
+        Write-Verbose "Fetching OU for $ComputerName."
+        $OUInfo = New-Object PSObject -property @{
+            'ComputerName' = $ComputerName
+            'OU'           = $null
+        }
+
+        try {
+            $computerObject = Get-ADComputer $ComputerName -ErrorAction Stop
+            $ou = ($computerObject.DistinguishedName -split ",", 2)[1]
+            $OUInfo.OU = $ou
+        }
+        catch {
+            Write-Error "An error occurred: $_"
+            return $null
+        }
+
+        return $OUInfo
     }
 
-    return $OUInfo
+    end {
+        Write-Verbose "End block executed."
+    }
 }
+
 
 #endregion Get-ComputerOU
 
@@ -84,30 +96,42 @@ function Get-ComputerOU {
 function Get-OUModificationHistory {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true, Position = 0)]
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
         [string]$ComputerName
     )
 
-    $OUHistory = New-Object PSObject -property @{
-        'ComputerName' = $ComputerName
-        'OU'           = $null
-        'Created'      = $null
-        'Modified'     = $null
+    begin {
+        Write-Verbose "Begin block executed."
     }
 
-    try {
-        $ADComputer = Get-ADComputer $ComputerName -Properties "Created", "Modified" -ErrorAction Stop
-        $OU = ($ADComputer.DistinguishedName -split ",", 2)[1]
-        $OUHistory.OU = $OU
-        $OUHistory.Created = $ADComputer.Created
-        $OUHistory.Modified = $ADComputer.Modified
-    }
-    catch {
-        Write-Error "An error occurred: $_"
-        return $null
+    process {
+        Write-Verbose "Fetching OU and modification history for $ComputerName."
+        $OUHistory = New-Object PSObject -property @{
+            'ComputerName' = $ComputerName
+            'OU'           = $null
+            'Created'      = $null
+            'Modified'     = $null
+        }
+
+        try {
+            $ADComputer = Get-ADComputer $ComputerName -Properties "Created", "Modified" -ErrorAction Stop
+            $OU = ($ADComputer.DistinguishedName -split ",", 2)[1]
+            $OUHistory.OU = $OU
+            $OUHistory.Created = $ADComputer.Created
+            $OUHistory.Modified = $ADComputer.Modified
+        }
+        catch {
+            Write-Error "An error occurred: $_"
+            return $null
+        }
+
+        return $OUHistory
     }
 
-    return $OUHistory
+    end {
+        Write-Verbose "End block executed."
+    }
 }
+
 
 #endregion Get-OUModificationHistory
